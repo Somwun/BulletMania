@@ -23,8 +23,8 @@ namespace BulletMania
         Player player;
         Boss boss;
         Circle bossFace;
-        Button continueBTN, playBTN, shotGunBTN, machineGunBTN, quitBTN, dontQuitBTN, deathMenuBTN, deathQuitBTN;
-        Button armourBuffBTN, armourTimeBTN, speedBuffBTN, speedTimeBTN, ammoBuffBTN, ammoTimeBTN, tutorialBTN, skipBTN;
+        Button continueBTN, playBTN, shotGunBTN, machineGunBTN, quitBTN, dontQuitBTN, deathMenuBTN, deathQuitBTN, tutorialBTN, prevBTN;
+        Button armourBuffBTN, armourTimeBTN, speedBuffBTN, speedTimeBTN, ammoBuffBTN, ammoTimeBTN, skipBTN;
         List<Rectangle> borders;
         List<Grunt> grunts;
         List<Circle> people;
@@ -36,6 +36,7 @@ namespace BulletMania
         SpriteFont testFont, menuFont, shopFont, titleFont;
         float playerRotation, bossRotation, ammoBuffAmount, shotGunReloadTime, machineGunReloadTime, bombReloadTime;
         int speed, damage, speedBuffAmount, armourBuffAmount, skillPoints, level;
+        int a, tutorialPhase;
         double speedBuffTime, ammoBuffTime, armourBuffTime, totalArmourBuffTime, totalAmmoBuffTime, totalSpeedBuffTime;
         double bossBulletTime2, gruntSpawnTime, bossBulletTime, bulletTime, bombTime, gruntPunchTime, startTime;
         bool playerShooting, keepSpawning, exit, prevExitState, startUp, shotGunEquipped, machineGunEquipped;
@@ -44,10 +45,10 @@ namespace BulletMania
         bool defeatedBlueTank, defeatedRedTank, defeatedHelicopter;
         double finishTime;
         List<string> acheivmentsList;
-        int a;
+
         enum Screen
         {
-            shop, battle, dead, win, exit, intro
+            shop, battle, dead, exit, intro, tutorial
         }
         Screen screen;
         public Game1()
@@ -87,6 +88,7 @@ namespace BulletMania
             speedBuffAmount = 2;
             skillPoints = 0;
             level = 1;
+            tutorialPhase = 0;
 
             machineGunReloadTime = 100;
             shotGunReloadTime = 850;
@@ -135,8 +137,9 @@ namespace BulletMania
             speedTimeBTN = new Button(new Vector2(681, 525), new Rectangle(622, 500, 225, 70), Color.White, Color.Black, " Buff Time\n3sec > 5sec", shopFont, frame, square);
             deathQuitBTN = new Button(new Vector2(95, 520), new Rectangle(37, 500, 225, 70), Color.DarkRed, Color.Black, "Quit", menuFont, frame, square);
             deathMenuBTN = new Button(new Vector2(690, 520), new Rectangle(622, 500, 225, 70), Color.DarkGreen, Color.Black, "Menu", menuFont, frame, square);
-            tutorialBTN = new Button(new Vector2(570, 700), new Rectangle(550, 680, 250, 70), Color.DarkGreen, Color.White, "Continue", menuFont, frame, square);
-            skipBTN = new Button(new Vector2(170, 700), new Rectangle(100, 680, 250, 70), Color.DarkRed, Color.Black, "Skip", menuFont, frame, square);
+            tutorialBTN = new Button(new Vector2(580, 700), new Rectangle(560, 680, 250, 70), Color.DarkGreen, Color.White, "Continue", menuFont, frame, square);
+            skipBTN = new Button(new Vector2(160, 700), new Rectangle(90, 680, 250, 70), Color.DarkRed, Color.Black, "Skip", menuFont, frame, square);
+            prevBTN = new Button(new Vector2(395, 700), new Rectangle(350, 680, 200, 70), Color.DarkBlue, Color.White, "Prev", menuFont, frame, square);
 
             player = new Player(playerRotation, playerMachineGun, square, frame, _graphics.PreferredBackBufferWidth / 2 + 175, _graphics.PreferredBackBufferHeight / 2 + 10, 50, 35, 10);
 
@@ -274,21 +277,586 @@ namespace BulletMania
                 }
             }
 
-            //Intro
-            if (exit == false & screen == Screen.intro)
+            if (exit == false)
             {
-                if (startUp)
+                //Intro
+                if (screen == Screen.intro)
                 {
-                    borders.Clear();
-                    boss.BossHealth = 0;
-                    level = 1;
-                    speed = 4;
-                    damage = 2;
-                    machineGunReloadTime = 100;
-                    shotGunReloadTime = 500;
-                    bombReloadTime = 5;
-                    bulletTime = 0;
-                    bombTime = 5;
+                    if (startUp)
+                    {
+                        borders.Clear();
+                        boss.BossHealth = 0;
+                        level = 1;
+                        speed = 4;
+                        damage = 2;
+                        machineGunReloadTime = 100;
+                        shotGunReloadTime = 500;
+                        bombReloadTime = 5;
+                        bulletTime = 0;
+                        bombTime = 5;
+                        bullets.Clear();
+                        bombs.Clear();
+                        people.Clear();
+                        grunts.Clear();
+                        buffs.Clear();
+                        armourBuffTime = 0;
+                        ammoBuffTime = 0;
+                        speedBuffTime = 0;
+                        totalArmourBuffTime = 0;
+                        totalAmmoBuffTime = 0;
+                        totalSpeedBuffTime = 0;
+                        bossBulletTime = 0;
+                        bossBulletTime2 = 0;
+                        gruntSpawnTime = 0;
+                        machineGunReloadTime = 100;
+                        shotGunReloadTime = 850;
+                        startTime = 5;
+                        keepSpawning = false;
+                        if (machineGunEquipped)
+                            currentPlayer = bigPlayerMachineGun;
+                        else
+                            currentPlayer = bigPlayerShotGun;
+                        player = new Player(playerRotation, currentPlayer, blankTexture, blankTexture, 165, 240, 200, 142, 10);
+                        startUp = false;
+                    }
+                    if (shotGunBTN.Click(mouseState, prevMouseState))
+                    {
+                        currentPlayer = bigPlayerShotGun;
+                        shotGunEquipped = true;
+                        machineGunEquipped = false;
+                    }
+                    else if (machineGunBTN.Click(mouseState, prevMouseState))
+                    {
+                        currentPlayer = bigPlayerMachineGun;
+                        shotGunEquipped = false;
+                        machineGunEquipped = true;
+                    }
+                    else if (playBTN.Click(mouseState, prevMouseState))
+                    {
+                        if (machineGunEquipped)
+                            currentPlayer = playerMachineGun;
+                        else
+                            currentPlayer = playerShotGun;
+                        screen = Screen.tutorial;
+                    }
+                    player.PlayerTexture = currentPlayer;
+
+                    bulletTime += gameTime.ElapsedGameTime.TotalMilliseconds;
+                    if (machineGunBTN.ButtonRectangle.Contains(new Vector2(mousePos.X + 15, mousePos.Y + 15)) == false & shotGunBTN.ButtonRectangle.Contains(new Vector2(mousePos.X + 15, mousePos.Y + 15)) == false & playBTN.ButtonRectangle.Contains(mousePos) == false & mouseState.LeftButton == ButtonState.Pressed)
+                    {
+                        if (machineGunEquipped & bulletTime >= machineGunReloadTime)
+                        {
+                            playerShooting = true;
+                            machineGunSound.Play();
+                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, playerFace, playerShooting));
+                            playerShooting = false;
+                            bulletTime = 0;
+                        }
+                        if (shotGunEquipped & bulletTime >= shotGunReloadTime)
+                        {
+                            playerShooting = true;
+                            for (int i = 0; i <= 9; i++)
+                                switch (i)
+                                {
+                                    case 0:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, playerFace, playerShooting));
+                                        break;
+                                    case 1:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 3f), playerFace.Y + (playerFace.X / 3f)), playerShooting));
+                                        break;
+                                    case 2:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 3.6f), playerFace.Y + (playerFace.X / 3.6f)), playerShooting));
+                                        break;
+                                    case 3:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 3f), playerFace.Y - (playerFace.X / 3f)), playerShooting));
+                                        break;
+                                    case 4:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 3.6f), playerFace.Y - (playerFace.X / 3.6f)), playerShooting));
+                                        break;
+                                    case 5:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 5.5f), playerFace.Y + (playerFace.X / 5.5f)), playerShooting));
+                                        break;
+                                    case 6:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 10f), playerFace.Y + (playerFace.X / 10f)), playerShooting));
+                                        break;
+                                    case 7:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 5.5f), playerFace.Y - (playerFace.X / 5.5f)), playerShooting));
+                                        break;
+                                    case 8:
+                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 10f), playerFace.Y - (playerFace.X / 10f)), playerShooting));
+                                        break;
+                                }
+                            shotGunSound.Play();
+                            playerShooting = false;
+                            bulletTime = 0;
+                        }
+                    }
+
+                    for (int i = 0; i < bullets.Count; i++)
+                        bullets[i].Move(borders, people, bullets, player, boss);
+                }
+
+                //Battle
+                else if (prevExitState == false & screen == Screen.battle)
+                {
+                    //Start Up
+                    if (boss.BossHealth <= 0)
+                    {
+                        if (level > 1)
+                            defeatedBlueTank = true;
+                        if (level > 3)
+                            defeatedRedTank = true;
+                        if (level >= 6)
+                            defeatedHelicopter = true;
+                        Save(acheivmentsList);
+                        if (borders.Count == 0)
+                        {
+                            borders.Add(new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, 85));
+                            borders.Add(new Rectangle(0, _graphics.PreferredBackBufferHeight - 85, _graphics.PreferredBackBufferWidth, 85));
+                            borders.Add(new Rectangle(0, 0, 85, _graphics.PreferredBackBufferHeight));
+                            borders.Add(new Rectangle(_graphics.PreferredBackBufferWidth - 85, 0, 85, _graphics.PreferredBackBufferHeight));
+                        }
+                        people.Remove(player.PlayerCircle);
+                        player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2 + 10, 50, 35, 10);
+                        people.Add(player.PlayerCircle);
+                        bullets.Clear();
+                        switch (level)
+                        {
+                            case 1:
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 50);
+                                people.Add(boss.BossCircle);
+                                break;
+                            case 2:
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 100);
+                                people.Add(boss.BossCircle);
+                                break;
+                            case 3:
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 200);
+                                people.Add(boss.BossCircle);
+                                break;
+                            case 4:
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 300);
+                                people.Add(boss.BossCircle);
+                                break;
+                            case 5:
+                                currentBoss = bossRed;
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 500);
+                                people.Add(boss.BossCircle);
+                                break;
+                            case 6:
+                                currentBoss = helicopter;
+                                boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 100, 250, 500);
+                                people.Remove(boss.BossCircle);
+                                break;
+                        }
+                    }
+
+                    if (startTime > 0)
+                        startTime -= gameTime.ElapsedGameTime.TotalSeconds;
+
+                    //Play
+                    if (startTime <= 0)
+                    {
+                        //Buffs
+                        for (int i = 0; i < buffs.Count; i++)
+                            if (buffs[i].BuffCircle.Intersects(player.PlayerCircle))
+                            {
+                                switch (buffs[i].BuffType)
+                                {
+                                    case "armour":
+                                        if (armourTimeUpgrade)
+                                            armourBuffTime = 5;
+                                        else
+                                            armourBuffTime = 3;
+                                        if (damage == 2)
+                                            damage -= armourBuffAmount;
+                                        player.HealthColor = Color.DarkBlue;
+                                        armourSound.Play();
+                                        break;
+                                    case "ammo":
+                                        if (ammoTimeUpgrade)
+                                            ammoBuffTime = 5;
+                                        else
+                                            ammoBuffTime = 3;
+                                        if (bombReloadTime == 5)
+                                        {
+                                            machineGunReloadTime *= ammoBuffAmount;
+                                            shotGunReloadTime *= ammoBuffAmount;
+                                            bombReloadTime *= ammoBuffAmount;
+                                        }
+                                        ammoSound.Play();
+                                        break;
+                                    case "speed":
+                                        if (speedTimeUpgrade)
+                                            speedBuffTime = 5;
+                                        else
+                                            speedBuffTime = 3;
+                                        if (speed == 4)
+                                            speed += speedBuffAmount;
+                                        speedUpSound.Play();
+                                        break;
+                                }
+                                buffs.Remove(buffs[i]);
+                            }
+                        if (armourBuffTime > 0)
+                        {
+                            totalArmourBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
+                            if (totalArmourBuffTime >= armourBuffTime)
+                            {
+                                armourBuffTime = 0;
+                                damage += armourBuffAmount;
+                                totalArmourBuffTime = 0;
+                                player.HealthColor = Color.DarkGreen;
+                            }
+                        }
+                        if (ammoBuffTime > 0)
+                        {
+                            totalAmmoBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
+                            if (totalAmmoBuffTime >= ammoBuffTime)
+                            {
+                                machineGunReloadTime /= ammoBuffAmount;
+                                shotGunReloadTime /= ammoBuffAmount;
+                                bombReloadTime /= ammoBuffAmount;
+                                ammoBuffTime = 0;
+                                totalAmmoBuffTime = 0;
+                            }
+                        }
+                        if (speedBuffTime > 0)
+                        {
+                            totalSpeedBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
+                            if (totalSpeedBuffTime >= speedBuffTime)
+                            {
+                                speed -= speedBuffAmount;
+                                speedBuffTime = 0;
+                                totalSpeedBuffTime = 0;
+                            }
+                        }
+
+                        //Player Shooting
+                        bulletTime += gameTime.ElapsedGameTime.TotalMilliseconds;
+                        if (machineGunEquipped)
+                            if (mouseState.LeftButton == ButtonState.Pressed & bulletTime >= machineGunReloadTime)
+                            {
+                                playerShooting = true;
+                                bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, playerFace, playerShooting));
+                                machineGunSound.Play();
+                                playerShooting = false;
+                                bulletTime = 0;
+                            }
+                        if (shotGunEquipped)
+                            if (mouseState.LeftButton == ButtonState.Pressed & bulletTime >= shotGunReloadTime)
+                            {
+                                playerShooting = true;
+                                for (int i = 0; i <= 9; i++)
+                                    switch (i)
+                                    {
+                                        case 0:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, playerFace, playerShooting));
+                                            break;
+                                        case 1:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 3f), playerFace.Y + (playerFace.X / 3f)), playerShooting));
+                                            break;
+                                        case 2:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 3.6f), playerFace.Y + (playerFace.X / 3.6f)), playerShooting));
+                                            break;
+                                        case 3:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 3f), playerFace.Y - (playerFace.X / 3f)), playerShooting));
+                                            break;
+                                        case 4:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 3.6f), playerFace.Y - (playerFace.X / 3.6f)), playerShooting));
+                                            break;
+                                        case 5:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 5.5f), playerFace.Y + (playerFace.X / 5.5f)), playerShooting));
+                                            break;
+                                        case 6:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 10f), playerFace.Y + (playerFace.X / 10f)), playerShooting));
+                                            break;
+                                        case 7:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 5.5f), playerFace.Y - (playerFace.X / 5.5f)), playerShooting));
+                                            break;
+                                        case 8:
+                                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 10f), playerFace.Y - (playerFace.X / 10f)), playerShooting));
+                                            break;
+                                    }
+                                playerShooting = false;
+                                shotGunSound.Play();
+                                bulletTime = 0;
+                            }
+                        for (int i = 0; i < bullets.Count; i++)
+                            bullets[i].Move(borders, people, bullets, player, boss);
+                        bombTime += gameTime.ElapsedGameTime.TotalSeconds;
+                        if (mouseState.RightButton == ButtonState.Pressed)
+                            if (bombTime >= bombReloadTime)
+                            {
+                                bombs.Add(new Bomb(bomb, explosion, (int)player.PlayerPosition.X, (int)player.PlayerPosition.Y, 20));
+                                bombTime = 0;
+                            }
+
+                        //Enemy Updates
+                        bossBulletTime += gameTime.ElapsedGameTime.TotalSeconds;
+                        bossBulletTime2 += gameTime.ElapsedGameTime.TotalMilliseconds;
+                        if (level == 1)
+                        {
+                            if (people.Contains(boss.BossCircle) == false)
+                                people.Add(boss.BossCircle);
+                            if (bossBulletTime >= 4)
+                            {
+                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                machineGunSound.Play();
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
+                            boss.Move(people);
+                        }
+                        else if (level == 2)
+                        {
+                            if (bossBulletTime >= 3)
+                            {
+                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                machineGunSound.Play();
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
+                            boss.Move(people);
+                        }
+                        else if (level == 3)
+                        {
+                            if (bossBulletTime >= 2)
+                            {
+                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                machineGunSound.Play();
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
+                            boss.Move(people);
+                        }
+                        else if (level == 4)
+                        {
+                            if (bossBulletTime >= 1.5f)
+                            {
+                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                machineGunSound.Play();
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition) * 1.5f;
+                            boss.Move(people);
+                        }
+                        else if (level == 5)
+                        {
+                            if (bossBulletTime >= 1)
+                            {
+                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                machineGunSound.Play();
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition) * 2;
+                            boss.Move(people);
+                        }
+                        else if (level == 6)
+                        {
+                            if (bossBulletTime >= 1)
+                                if (bossBulletTime2 >= 75)
+                                {
+                                    bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                    machineGunSound.Play();
+                                    bossBulletTime2 = 0;
+                                }
+                            if (bossBulletTime >= 2)
+                            {
+                                bombs.Add(new Bomb(bomb, explosion, (int)boss.BossPosition.X, (int)boss.BossPosition.Y, 20));
+                                bossBulletTime = 0;
+                            }
+                            boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
+                            boss.Move(people);
+                        }
+
+                        //Spawning Grunts
+                        gruntSpawnTime += gameTime.ElapsedGameTime.TotalSeconds;
+                        if (Math.Round(gruntSpawnTime % 5) == 0 & gruntSpawnTime > 1)
+                        {
+                            if (grunts.Count < level + 1)
+                                if (keepSpawning == true)
+                                {
+                                    for (int i = 0; i < 1; i++)
+                                    {
+                                        grunts.Add(new Grunt(enemy, square, frame, random.Next(200, 700), random.Next(200, 700), 60, level * 7));
+                                        for (int a = 0; a < people.Count; a++)
+                                            if (grunts[grunts.Count - 1].GruntCircle.Intersects(people[a]))
+                                            {
+                                                grunts.Remove(grunts[grunts.Count - 1]);
+                                                i--;
+                                                break;
+                                            }
+                                    }
+                                    people.Add(grunts[grunts.Count - 1].GruntCircle);
+                                    keepSpawning = false;
+                                }
+                        }
+                        else
+                            keepSpawning = true;
+
+                        //Grunt Movement
+                        if (level == 1 || level == 2)
+                        {
+                            foreach (Grunt grunt in grunts)
+                            {
+                                grunt.GruntSpeed = GetSpeed(grunt.GruntPosition, player.PlayerPosition) * 2;
+                                grunt.Move(borders, people, player);
+                            }
+                            foreach (Grunt grunt in grunts)
+                            {
+                                bossRotation = GetAngle(grunt.GruntPosition, player.PlayerPosition);
+                                grunt.GruntRotation = bossRotation;
+                            }
+                        }
+                        else
+                        {
+                            foreach (Grunt grunt in grunts)
+                            {
+                                grunt.GruntSpeed = GetSpeed(grunt.GruntPosition, player.PlayerPosition) * (int)(level / 2 + 1);
+                                grunt.Move(borders, people, player);
+                            }
+                            foreach (Grunt grunt in grunts)
+                            {
+                                bossRotation = GetAngle(grunt.GruntPosition, player.PlayerPosition);
+                                grunt.GruntRotation = bossRotation;
+                            }
+                        }
+
+                        //Grunt Punching
+                        gruntPunchTime += gameTime.ElapsedGameTime.TotalMilliseconds;
+                        foreach (Grunt grunt in grunts)
+                            if (grunt.Intersects & Math.Round(gruntPunchTime % 500) == 0)
+                            {
+                                player.PlayerHealth -= 1;
+                                switch (random.Next(1, 4))
+                                {
+                                    case 1:
+                                        hurt1.Play();
+                                        break;
+                                    case 2:
+                                        hurt2.Play();
+                                        break;
+                                    case 3:
+                                        hurt3.Play();
+                                        break;
+                                }
+                                punchSound.Play();
+                            }
+                        //Player Movement
+                        player.PlayerSpeed = GetPlayerSpeed(keyboardState);
+                        player.Move(borders, people);
+
+                        //Damage Checks
+                        for (int i = 0; i < bullets.Count; i++)
+                        {
+                            if (bullets[i].BulletHit)
+                            {
+                                if (player.PlayerCircle.Intersects(bullets[i].BulletCircle) & bullets[i].PlayerShot == false)
+                                {
+                                    player.PlayerHealth -= damage;
+                                    switch (random.Next(1, 4))
+                                    {
+                                        case 1:
+                                            hurt1.Play();
+                                            break;
+                                        case 2:
+                                            hurt2.Play();
+                                            break;
+                                        case 3:
+                                            hurt3.Play();
+                                            break;
+                                    }
+                                    bullets.Remove(bullets[i]);
+                                    break;
+                                }
+                                if (boss.BossCircle.Intersects(bullets[i].BulletCircle) || bossFace.Intersects(bullets[i].BulletCircle))
+                                {
+                                    boss.BossHealth -= 1;
+                                    bullets.Remove(bullets[i]);
+                                    break;
+                                }
+                                foreach (Grunt grunt in grunts)
+                                    if (grunt.GruntCircle.Intersects(bullets[i].BulletCircle) & bullets[i].PlayerShot)
+                                    {
+                                        grunt.TakeDamage();
+                                        bullets.Remove(bullets[i]);
+                                        break;
+                                    }
+                            }
+                        }
+
+                        foreach (Bomb bomb in bombs)
+                        {
+                            bomb.Fuse(gameTime, bombs);
+                            if (bomb.Exploding)
+                            {
+                                if (player.PlayerCircle.Intersects(bomb.BombCircle))
+                                    player.PlayerHealth -= 1;
+                                if (boss.BossCircle.Intersects(bomb.BombCircle) & level != 4)
+                                    boss.BossHealth -= 2;
+                                foreach (Grunt grunt in grunts)
+                                    if (grunt.GruntCircle.Intersects(bomb.BombCircle))
+                                        grunt.TakeDamage();
+                                if (explosionInstance.State != SoundState.Playing & bomb.FuseTime < 0.5)
+                                    explosionInstance.Play();
+                            }
+                            if (bomb.FuseTime >= 2 & bomb.Exploding)
+                            {
+                                bombs.Remove(bomb);
+                                break;
+                            }
+                        }
+
+                        if (player.PlayerHealth <= 0)
+                            screen = Screen.dead;
+                        if (boss.BossHealth <= 0)
+                        {
+                            skillPoints += 1;
+                            level += 1;
+                            screen = Screen.shop;
+                        }
+                        for (int i = 0; i < grunts.Count; i++)
+                        {
+                            if (grunts[i].GruntHealth <= 0)
+                            {
+                                string buffType = "";
+                                switch (random.Next(1, 5))
+                                {
+                                    case 1:
+                                        break;
+                                    case 2:
+                                        buffType = "armour";
+                                        break;
+                                    case 3:
+                                        buffType = "speed";
+                                        break;
+                                    case 4:
+                                        buffType = "ammo";
+                                        break;
+                                }
+                                if (buffType != "")
+                                    buffs.Add(new Buff(new Circle(new Vector2(grunts[i].GruntCircle.MiddleX, grunts[i].GruntCircle.MiddleY), grunts[i].GruntCircle.Radius * 1.3f), buffType, armourBuff, speedBuff, ammoBuff));
+                                people.Remove(grunts[i].GruntCircle);
+                                grunts.Remove(grunts[i]);
+                            }
+                        }
+                    }
+                }
+
+                //Shop
+                else if (prevExitState == false & screen == Screen.shop)
+                {
+                    if (speed > 4)
+                        speed = 4;
+                    if (damage < 2)
+                        damage = 2;
+                    if (bombReloadTime < 5)
+                    {
+                        machineGunReloadTime = 100;
+                        shotGunReloadTime = 500;
+                        bombReloadTime = 5;
+                    }
                     bullets.Clear();
                     bombs.Clear();
                     people.Clear();
@@ -305,640 +873,104 @@ namespace BulletMania
                     gruntSpawnTime = 0;
                     machineGunReloadTime = 100;
                     shotGunReloadTime = 850;
+                    bombReloadTime = 5;
                     startTime = 5;
                     keepSpawning = false;
-                    if (machineGunEquipped)
-                        currentPlayer = bigPlayerMachineGun;
-                    else
-                        currentPlayer = bigPlayerShotGun;
-                    player = new Player(playerRotation, currentPlayer, blankTexture, blankTexture, 165, 240, 200, 142, 10);
-                    startUp = false;
-                }
-                if (shotGunBTN.Click(mouseState, prevMouseState))
-                {
-                    currentPlayer = bigPlayerShotGun;
-                    shotGunEquipped = true;
-                    machineGunEquipped = false;
-                }
-                else if (machineGunBTN.Click(mouseState, prevMouseState))
-                {
-                    currentPlayer = bigPlayerMachineGun;
-                    shotGunEquipped = false;
-                    machineGunEquipped = true;
-                }
-                else if (playBTN.Click(mouseState, prevMouseState))
-                {
-                    if (machineGunEquipped)
-                        currentPlayer = playerMachineGun;
-                    else
-                        currentPlayer = playerShotGun;
-                    screen = Screen.battle;
-                }
-                player.PlayerTexture = currentPlayer;
 
-                bulletTime += gameTime.ElapsedGameTime.TotalMilliseconds;
-                if (machineGunBTN.ButtonRectangle.Contains(new Vector2(mousePos.X + 15, mousePos.Y + 15)) == false & shotGunBTN.ButtonRectangle.Contains(new Vector2(mousePos.X + 15, mousePos.Y + 15)) == false & playBTN.ButtonRectangle.Contains(mousePos) == false & mouseState.LeftButton == ButtonState.Pressed)
-                {
-                    if (machineGunEquipped & bulletTime >= machineGunReloadTime)
+                    if (skillPoints > 0)
                     {
-                        playerShooting = true;
-                        machineGunSound.Play();
-                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, playerFace, playerShooting));
-                        playerShooting = false;
-                        bulletTime = 0;
+                        if (armourBuffBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & armourTimeUpgrade == false)
+                        {
+                            armourBuffAmount += 1;
+                            armourAmountUpgrade = true;
+                            skillPoints -= 1;
+                        }
+                        else if (armourTimeBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & armourTimeUpgrade == false)
+                        {
+                            armourTimeUpgrade = true;
+                            skillPoints -= 1;
+                        }
+                        else if (ammoBuffBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & ammoTimeUpgrade == false)
+                        {
+                            ammoBuffAmount -= 0.17f;
+                            ammoAmountUpgrade = true;
+                            skillPoints -= 1;
+                        }
+                        else if (ammoTimeBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & ammoTimeUpgrade == false)
+                        {
+                            ammoTimeUpgrade = true;
+                            skillPoints -= 1;
+                        }
+                        else if (speedBuffBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & speedTimeUpgrade == false)
+                        {
+                            speedBuffAmount += 2;
+                            speedAmountUpgrade = true;
+                            skillPoints -= 1;
+                        }
+                        else if (speedTimeBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & speedTimeUpgrade == false)
+                        {
+                            speedTimeUpgrade = true;
+                            skillPoints -= 1;
+                        }
                     }
-                    if (shotGunEquipped & bulletTime >= shotGunReloadTime)
+                    if (mouseState.LeftButton == ButtonState.Pressed)
                     {
-                        playerShooting = true;
-                        for (int i = 0; i <= 9; i++)
-                            switch (i)
-                            {
-                                case 0:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, playerFace, playerShooting));
-                                    break;
-                                case 1:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 3f), playerFace.Y + (playerFace.X / 3f)), playerShooting));
-                                    break;
-                                case 2:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 3.6f), playerFace.Y + (playerFace.X / 3.6f)), playerShooting));
-                                    break;
-                                case 3:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 3f), playerFace.Y - (playerFace.X / 3f)), playerShooting));
-                                    break;
-                                case 4:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 3.6f), playerFace.Y - (playerFace.X / 3.6f)), playerShooting));
-                                    break;
-                                case 5:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 5.5f), playerFace.Y + (playerFace.X / 5.5f)), playerShooting));
-                                    break;
-                                case 6:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X - (playerFace.Y / 10f), playerFace.Y + (playerFace.X / 10f)), playerShooting));
-                                    break;
-                                case 7:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 5.5f), playerFace.Y - (playerFace.X / 5.5f)), playerShooting));
-                                    break;
-                                case 8:
-                                    bullets.Add(new Bullet(bullet, PlaceBullet(true), 30, new Vector2(playerFace.X + (playerFace.Y / 10f), playerFace.Y - (playerFace.X / 10f)), playerShooting));
-                                    break;
-                            }
-                        shotGunSound.Play();
-                        playerShooting = false;
-                        bulletTime = 0;
+                        if (continueBTN.Click(mouseState, prevMouseState))
+                            screen = Screen.battle;
                     }
                 }
 
-                for (int i = 0; i < bullets.Count; i++)
-                    bullets[i].Move(borders, people, bullets, player, boss);
-            }
-
-            //Arena
-            else if (exit == false & prevExitState == false & screen == Screen.battle)
-            {
-                //Start Up
-                if (boss.BossHealth <= 0)
+                //Death
+                else if (screen == Screen.dead)
                 {
-                    if (level > 1)
-                        defeatedBlueTank = true;
-                    if (level > 3)
-                        defeatedRedTank = true;
-                    if (screen == Screen.win)
-                        defeatedHelicopter = true;
-                    Save(acheivmentsList);
-                    if (borders.Count == 0)
+                    if (deathQuitBTN.Click(mouseState, prevMouseState))
+                        Exit();
+                    if (deathMenuBTN.Click(mouseState, prevMouseState))
                     {
-                        borders.Add(new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, 85));
-                        borders.Add(new Rectangle(0, _graphics.PreferredBackBufferHeight - 85, _graphics.PreferredBackBufferWidth, 85));
-                        borders.Add(new Rectangle(0, 0, 85, _graphics.PreferredBackBufferHeight));
-                        borders.Add(new Rectangle(_graphics.PreferredBackBufferWidth - 85, 0, 85, _graphics.PreferredBackBufferHeight));
+                        startUp = true;
+                        screen = Screen.intro;
                     }
-                    people.Remove(player.PlayerCircle);
-                    player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2 + 10, 50, 35, 10);
-                    people.Add(player.PlayerCircle);
-                    bullets.Clear();
-                    switch (level)
+                }
+
+                //Tutorial
+                else if (screen == Screen.tutorial)
+                {
+                    if (skipBTN.Click(mouseState, prevMouseState))
+                        screen = Screen.battle;
+                    else if (tutorialBTN.Click(mouseState, prevMouseState))
+                        tutorialPhase++;
+                    else if (prevBTN.Click(mouseState, prevMouseState) & tutorialPhase > 1)
+                        tutorialPhase--;
+                    switch (tutorialPhase)
                     {
+                        case 0:
+                            //Do Nothing
+                            break;
                         case 1:
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 50);
-                            people.Add(boss.BossCircle);
+                            //Explain the player
                             break;
                         case 2:
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 100);
-                            people.Add(boss.BossCircle);
+                            //Explain the tank
                             break;
                         case 3:
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 200);
-                            people.Add(boss.BossCircle);
+                            //What grunts are
                             break;
                         case 4:
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 300);
-                            people.Add(boss.BossCircle);
+
                             break;
                         case 5:
-                            currentBoss = bossRed;
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 500);
-                            people.Add(boss.BossCircle);
+                            //How bombs work
                             break;
                         case 6:
-                            currentBoss = helicopter;
-                            boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 100, 250, 500);
-                            people.Remove(boss.BossCircle);
+                            //how the shop works
+                            break;
+                        case 7:
+                            //Exit
+                            break;
+                        case 8:
+                            screen = Screen.battle;
                             break;
                     }
-                }
-
-                if (startTime > 0)
-                    startTime -= gameTime.ElapsedGameTime.TotalSeconds;
-
-                //Play
-                if (startTime <= 0)
-                {
-                    //Tutorial
-                    if (1 == 1)
-                    {
-                        if (skipBTN.Click(mouseState, prevMouseState))
-                        {
-
-                        }
-                        if (tutorialBTN.Click(mouseState, prevMouseState))
-                        {
-
-                        }
-                    }
-
-                    //Buffs
-                    for (int i = 0; i < buffs.Count; i++)
-                        if (buffs[i].BuffCircle.Intersects(player.PlayerCircle))
-                        {
-                            switch (buffs[i].BuffType)
-                            {
-                                case "armour":
-                                    if (armourTimeUpgrade)
-                                        armourBuffTime = 5;
-                                    else
-                                        armourBuffTime = 3;
-                                    if (damage == 2)
-                                        damage -= armourBuffAmount;
-                                    player.HealthColor = Color.DarkBlue;
-                                    armourSound.Play();
-                                    break;
-                                case "ammo":
-                                    if (ammoTimeUpgrade)
-                                        ammoBuffTime = 5;
-                                    else
-                                        ammoBuffTime = 3;
-                                    if (bombReloadTime == 5)
-                                    {
-                                        machineGunReloadTime *= ammoBuffAmount;
-                                        shotGunReloadTime *= ammoBuffAmount;
-                                        bombReloadTime *= ammoBuffAmount;
-                                    }
-                                    ammoSound.Play();
-                                    break;
-                                case "speed":
-                                    if (speedTimeUpgrade)
-                                        speedBuffTime = 5;
-                                    else
-                                        speedBuffTime = 3;
-                                    if (speed == 4)
-                                        speed += speedBuffAmount;
-                                    speedUpSound.Play();
-                                    break;
-                            }
-                            buffs.Remove(buffs[i]);
-                        }
-                    if (armourBuffTime > 0)
-                    {
-                        totalArmourBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
-                        if (totalArmourBuffTime >= armourBuffTime)
-                        {
-                            armourBuffTime = 0;
-                            damage += armourBuffAmount;
-                            totalArmourBuffTime = 0;
-                            player.HealthColor = Color.DarkGreen;
-                        }
-                    }
-                    if (ammoBuffTime > 0)
-                    {
-                        totalAmmoBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
-                        if (totalAmmoBuffTime >= ammoBuffTime)
-                        {
-                            machineGunReloadTime /= ammoBuffAmount;
-                            shotGunReloadTime /= ammoBuffAmount;
-                            bombReloadTime /= ammoBuffAmount;
-                            ammoBuffTime = 0;
-                            totalAmmoBuffTime = 0;
-                        }
-                    }
-                    if (speedBuffTime > 0)
-                    {
-                        totalSpeedBuffTime += gameTime.ElapsedGameTime.TotalSeconds;
-                        if (totalSpeedBuffTime >= speedBuffTime)
-                        {
-                            speed -= speedBuffAmount;
-                            speedBuffTime = 0;
-                            totalSpeedBuffTime = 0;
-                        }
-                    }
-
-                    //Player Shooting
-                    bulletTime += gameTime.ElapsedGameTime.TotalMilliseconds;
-                    if (machineGunEquipped)
-                        if (mouseState.LeftButton == ButtonState.Pressed & bulletTime >= machineGunReloadTime)
-                        {
-                            playerShooting = true;
-                            bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, playerFace, playerShooting));
-                            machineGunSound.Play();
-                            playerShooting = false;
-                            bulletTime = 0;
-                        }
-                    if (shotGunEquipped)
-                        if (mouseState.LeftButton == ButtonState.Pressed & bulletTime >= shotGunReloadTime)
-                        {
-                            playerShooting = true;
-                            for (int i = 0; i <= 9; i++)
-                                switch (i)
-                                {
-                                    case 0:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, playerFace, playerShooting));
-                                        break;
-                                    case 1:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 3f), playerFace.Y + (playerFace.X / 3f)), playerShooting));
-                                        break;
-                                    case 2:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 3.6f), playerFace.Y + (playerFace.X / 3.6f)), playerShooting));
-                                        break;
-                                    case 3:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 3f), playerFace.Y - (playerFace.X / 3f)), playerShooting));
-                                        break;
-                                    case 4:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 3.6f), playerFace.Y - (playerFace.X / 3.6f)), playerShooting));
-                                        break;
-                                    case 5:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 5.5f), playerFace.Y + (playerFace.X / 5.5f)), playerShooting));
-                                        break;
-                                    case 6:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X - (playerFace.Y / 10f), playerFace.Y + (playerFace.X / 10f)), playerShooting));
-                                        break;
-                                    case 7:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 5.5f), playerFace.Y - (playerFace.X / 5.5f)), playerShooting));
-                                        break;
-                                    case 8:
-                                        bullets.Add(new Bullet(bullet, PlaceBullet(true), 15, new Vector2(playerFace.X + (playerFace.Y / 10f), playerFace.Y - (playerFace.X / 10f)), playerShooting));
-                                        break;
-                                }
-                            playerShooting = false;
-                            shotGunSound.Play();
-                            bulletTime = 0;
-                        }
-                    for (int i = 0; i < bullets.Count; i++)
-                        bullets[i].Move(borders, people, bullets, player, boss);
-                    bombTime += gameTime.ElapsedGameTime.TotalSeconds;
-                    if (mouseState.RightButton == ButtonState.Pressed)
-                        if (bombTime >= bombReloadTime)
-                        {
-                            bombs.Add(new Bomb(bomb, explosion, (int)player.PlayerPosition.X, (int)player.PlayerPosition.Y, 20));
-                            bombTime = 0;
-                        }
-
-                    //Enemy Updates
-                    bossBulletTime += gameTime.ElapsedGameTime.TotalSeconds;
-                    bossBulletTime2 += gameTime.ElapsedGameTime.TotalMilliseconds;
-                    if (level == 1)
-                    {
-                        if (people.Contains(boss.BossCircle) == false)
-                            people.Add(boss.BossCircle);
-                        if (bossBulletTime >= 4)
-                        {
-                            bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                            machineGunSound.Play();
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
-                        boss.Move(people);
-                    }
-                    else if (level == 2)
-                    {
-                        if (bossBulletTime >= 3)
-                        {
-                            bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                            machineGunSound.Play();
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
-                        boss.Move(people);
-                    }
-                    else if (level == 3)
-                    {
-                        if (bossBulletTime >= 2)
-                        {
-                            bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                            machineGunSound.Play();
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
-                        boss.Move(people);
-                    }
-                    else if (level == 4)
-                    {
-                        if (bossBulletTime >= 1.5f)
-                        {
-                            bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                            machineGunSound.Play();
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition) * 1.5f;
-                        boss.Move(people);
-                    }
-                    else if (level == 5)
-                    {
-                        if (bossBulletTime >= 1)
-                        {
-                            bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                            machineGunSound.Play();
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition) * 2;
-                        boss.Move(people);
-                    }
-                    else if (level == 6)
-                    {
-                        if (bossBulletTime >= 1)
-                            if (bossBulletTime2 >= 75)
-                            {
-                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                                machineGunSound.Play();
-                                bossBulletTime2 = 0;
-                            }
-                        if (bossBulletTime >= 2)
-                        {
-                            bombs.Add(new Bomb(bomb, explosion, (int)boss.BossPosition.X, (int)boss.BossPosition.Y, 20));
-                            bossBulletTime = 0;
-                        }
-                        boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
-                        boss.Move(people);
-                    }
-
-                    //Spawning Grunts
-                    gruntSpawnTime += gameTime.ElapsedGameTime.TotalSeconds;
-                    if (Math.Round(gruntSpawnTime % 5) == 0 & gruntSpawnTime > 1)
-                    {
-                        if (grunts.Count < level + 1)
-                            if (keepSpawning == true)
-                            {
-                                for (int i = 0; i < 1; i++)
-                                {
-                                    grunts.Add(new Grunt(enemy, square, frame, random.Next(200, 700), random.Next(200, 700), 60, level * 7));
-                                    for (int a = 0; a < people.Count; a++)
-                                        if (grunts[grunts.Count - 1].GruntCircle.Intersects(people[a]))
-                                        {
-                                            grunts.Remove(grunts[grunts.Count - 1]);
-                                            i--;
-                                            break;
-                                        }
-                                }
-                                people.Add(grunts[grunts.Count - 1].GruntCircle);
-                                keepSpawning = false;
-                            }
-                    }
-                    else
-                        keepSpawning = true;
-
-                    //Grunt Movement
-                    if (level == 1 || level == 2)
-                    {
-                        foreach (Grunt grunt in grunts)
-                        {
-                            grunt.GruntSpeed = GetSpeed(grunt.GruntPosition, player.PlayerPosition) * 2;
-                            grunt.Move(borders, people, player);
-                        }
-                        foreach (Grunt grunt in grunts)
-                        {
-                            bossRotation = GetAngle(grunt.GruntPosition, player.PlayerPosition);
-                            grunt.GruntRotation = bossRotation;
-                        }
-                    }
-                    else
-                    {
-                        foreach (Grunt grunt in grunts)
-                        {
-                            grunt.GruntSpeed = GetSpeed(grunt.GruntPosition, player.PlayerPosition) * (int)(level / 2 + 1);
-                            grunt.Move(borders, people, player);
-                        }
-                        foreach (Grunt grunt in grunts)
-                        {
-                            bossRotation = GetAngle(grunt.GruntPosition, player.PlayerPosition);
-                            grunt.GruntRotation = bossRotation;
-                        }
-                    }
-
-                    //Grunt Punching
-                    gruntPunchTime += gameTime.ElapsedGameTime.TotalMilliseconds;
-                    foreach (Grunt grunt in grunts)
-                        if (grunt.Intersects & Math.Round(gruntPunchTime % 500) == 0)
-                        {
-                            player.PlayerHealth -= 1;
-                            switch (random.Next(1, 4))
-                            {
-                                case 1:
-                                    hurt1.Play();
-                                    break;
-                                case 2:
-                                    hurt2.Play();
-                                    break;
-                                case 3:
-                                    hurt3.Play();
-                                    break;
-                            }
-                            punchSound.Play();
-                        }
-                    //Player Movement
-                    player.PlayerSpeed = GetPlayerSpeed(keyboardState);
-                    player.Move(borders, people);
-
-                    //Damage Checks
-                    for (int i = 0; i < bullets.Count; i++)
-                    {
-                        if (bullets[i].BulletHit)
-                        {
-                            if (player.PlayerCircle.Intersects(bullets[i].BulletCircle) & bullets[i].PlayerShot == false)
-                            {
-                                player.PlayerHealth -= damage;
-                                switch (random.Next(1, 4))
-                                {
-                                    case 1:
-                                        hurt1.Play();
-                                        break;
-                                    case 2:
-                                        hurt2.Play();
-                                        break;
-                                    case 3:
-                                        hurt3.Play();
-                                        break;
-                                }
-                                bullets.Remove(bullets[i]);
-                                break;
-                            }
-                            if (boss.BossCircle.Intersects(bullets[i].BulletCircle) || bossFace.Intersects(bullets[i].BulletCircle))
-                            {
-                                boss.BossHealth -= 1;
-                                bullets.Remove(bullets[i]);
-                                break;
-                            }
-                            foreach (Grunt grunt in grunts)
-                                if (grunt.GruntCircle.Intersects(bullets[i].BulletCircle) & bullets[i].PlayerShot)
-                                {
-                                    grunt.TakeDamage();
-                                    bullets.Remove(bullets[i]);
-                                    break;
-                                }
-                        }
-                    }
-
-                    foreach (Bomb bomb in bombs)
-                    {
-                        bomb.Fuse(gameTime, bombs);
-                        if (bomb.Exploding)
-                        {
-                            if (player.PlayerCircle.Intersects(bomb.BombCircle))
-                                player.PlayerHealth -= 1;
-                            if (boss.BossCircle.Intersects(bomb.BombCircle) & level != 4)
-                                boss.BossHealth -= 2;
-                            foreach (Grunt grunt in grunts)
-                                if (grunt.GruntCircle.Intersects(bomb.BombCircle))
-                                    grunt.TakeDamage();
-                            if (explosionInstance.State != SoundState.Playing & bomb.FuseTime < 0.5)
-                                explosionInstance.Play();
-                        }
-                        if (bomb.FuseTime >= 2 & bomb.Exploding)
-                        {
-                            bombs.Remove(bomb);
-                            break;
-                        }
-                    }
-
-                    if (player.PlayerHealth <= 0)
-                        screen = Screen.dead;
-                    if (boss.BossHealth <= 0)
-                    {
-                        skillPoints += 1;
-                        level += 1;
-                        screen = Screen.shop;
-                    }
-                    for (int i = 0; i < grunts.Count; i++)
-                    {
-                        if (grunts[i].GruntHealth <= 0)
-                        {
-                            string buffType = "";
-                            switch (random.Next(1, 5))
-                            {
-                                case 1:
-                                    break;
-                                case 2:
-                                    buffType = "armour";
-                                    break;
-                                case 3:
-                                    buffType = "speed";
-                                    break;
-                                case 4:
-                                    buffType = "ammo";
-                                    break;
-                            }
-                            if (buffType != "")
-                                buffs.Add(new Buff(new Circle(new Vector2(grunts[i].GruntCircle.MiddleX, grunts[i].GruntCircle.MiddleY), grunts[i].GruntCircle.Radius * 1.3f), buffType, armourBuff, speedBuff, ammoBuff));
-                            people.Remove(grunts[i].GruntCircle);
-                            grunts.Remove(grunts[i]);
-                        }
-                    }
-                }
-            }
-
-            //Shop
-            else if (exit == false & prevExitState == false & screen == Screen.shop)
-            {
-                if (speed > 4)
-                    speed = 4;
-                if (damage < 2)
-                    damage = 2;
-                if (bombReloadTime < 5)
-                {
-                    machineGunReloadTime = 100;
-                    shotGunReloadTime = 500;
-                    bombReloadTime = 5;
-                }
-                bullets.Clear();
-                bombs.Clear();
-                people.Clear();
-                grunts.Clear();
-                buffs.Clear();
-                armourBuffTime = 0;
-                ammoBuffTime = 0;
-                speedBuffTime = 0;
-                totalArmourBuffTime = 0;
-                totalAmmoBuffTime = 0;
-                totalSpeedBuffTime = 0;
-                bossBulletTime = 0;
-                bossBulletTime2 = 0;
-                gruntSpawnTime = 0;
-                machineGunReloadTime = 100;
-                shotGunReloadTime = 850;
-                bombReloadTime = 5;
-                startTime = 5;
-                keepSpawning = false;
-
-                if (level == 5)
-                    screen = Screen.win;
-                if (skillPoints > 0)
-                {
-                    if (armourBuffBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & armourTimeUpgrade == false)
-                    {
-                        armourBuffAmount += 1;
-                        armourAmountUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                    else if (armourTimeBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & armourTimeUpgrade == false)
-                    {
-                        armourTimeUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                    else if (ammoBuffBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & ammoTimeUpgrade == false)
-                    {
-                        ammoBuffAmount -= 0.17f;
-                        ammoAmountUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                    else if (ammoTimeBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & ammoTimeUpgrade == false)
-                    {
-                        ammoTimeUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                    else if (speedBuffBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & speedTimeUpgrade == false)
-                    {
-                        speedBuffAmount += 2;
-                        speedAmountUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                    else if (speedTimeBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & speedTimeUpgrade == false)
-                    {
-                        speedTimeUpgrade = true;
-                        skillPoints -= 1;
-                    }
-                }
-                if (mouseState.LeftButton == ButtonState.Pressed)
-                {
-                    if (continueBTN.Click(mouseState, prevMouseState))
-                        screen = Screen.battle;
-                }
-            }
-
-            //Death
-            else if (exit == false & screen == Screen.dead)
-            {
-                if (deathQuitBTN.Click(mouseState, prevMouseState))
-                    Exit();
-                if (deathMenuBTN.Click(mouseState, prevMouseState))
-                {
-                    startUp = true;
-                    screen = Screen.intro;
                 }
             }
 
@@ -951,8 +983,9 @@ namespace BulletMania
         {
             GraphicsDevice.Clear(Color.White);
             _spriteBatch.Begin();
-            if (screen == Screen.battle || screen == Screen.dead)
+            if (screen == Screen.battle || screen == Screen.dead || screen == Screen.tutorial)
             {
+                //Battle
                 _spriteBatch.Draw(arena, screenRect, Color.White);
                 foreach (Buff buff in buffs)
                     buff.Draw(_spriteBatch);
@@ -994,8 +1027,11 @@ namespace BulletMania
                         _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, (int)(player.PlayerRectangle.Width * (bombTime / 5)), 10), Color.White * 0.7f);
                     else
                         _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, player.PlayerRectangle.Width, 10), Color.White * 0.7f);
-                    _spriteBatch.DrawString(titleFont, Math.Round(startTime) + "", new Vector2(440, 450), Color.White);
+                    if (screen != Screen.tutorial)
+                        _spriteBatch.DrawString(titleFont, Math.Round(startTime) + "", new Vector2(440, 450), Color.White);
                 }
+
+                //Dead
                 if (screen == Screen.dead)
                 {
                     _spriteBatch.Draw(square, screenRect, Color.Black * 0.3f);
@@ -1003,11 +1039,56 @@ namespace BulletMania
                     deathQuitBTN.Draw(_spriteBatch, mouseState);
                     deathMenuBTN.Draw(_spriteBatch, mouseState);
                 }
-                if (1 == 1)
+
+                //Tutorial
+                if (screen == Screen.tutorial)
                 {
-                    _spriteBatch.DrawString(menuFont, "Welcome to Cool Game", new Vector2(190, 170), Color.White);
                     tutorialBTN.Draw(_spriteBatch, mouseState);
                     skipBTN.Draw(_spriteBatch, mouseState);
+                    if (tutorialPhase > 1)
+                        prevBTN.Draw(_spriteBatch, mouseState);
+                    switch (tutorialPhase)
+                    {
+                        case 0:
+                            _spriteBatch.DrawString(menuFont, "       Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            break;
+                        case 1:
+                            //Explain the player
+                            _spriteBatch.DrawString(menuFont, "              This is you\n     What's your goal?\nDon't die, and blow that thing up", new Vector2(20, 200), Color.White);
+                            _spriteBatch.DrawString(shopFont, "<-(That thing)          (You)->", new Vector2(300, 500), Color.White);
+
+                            break;
+                        case 2:
+                            //Explain the tank
+                            _spriteBatch.DrawString(menuFont, "         Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                        case 3:
+                            //What grunts are
+                            _spriteBatch.DrawString(menuFont, "          Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                        case 4:
+                            //Powerups
+                            _spriteBatch.DrawString(menuFont, "           Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                        case 5:
+                            //How bombs work
+                            _spriteBatch.DrawString(menuFont, "            Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                        case 6:
+                            //how the shop works
+                            _spriteBatch.DrawString(menuFont, "             Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                        case 7:
+                            //Exit
+                            _spriteBatch.DrawString(menuFont, "              Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+
+                            break;
+                    }
                 }
             }
             else if (screen == Screen.shop)
@@ -1065,10 +1146,6 @@ namespace BulletMania
                 else
                     _spriteBatch.Draw(helicopter, new Rectangle(715, 575, 100, 250), null, Color.White, 1.575f, new Vector2(helicopter.Width / 2, helicopter.Height / 2), SpriteEffects.None, 0f);
 
-            }
-            else if (screen == Screen.win)
-            {
-                _spriteBatch.DrawString(titleFont, "You Win", new Vector2(10, 10), Color.Black);
             }
             if (exit == true)
             {
