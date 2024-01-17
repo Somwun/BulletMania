@@ -417,7 +417,7 @@ namespace BulletMania
                             borders.Add(new Rectangle(_graphics.PreferredBackBufferWidth - 85, 0, 85, _graphics.PreferredBackBufferHeight));
                         }
                         people.Remove(player.PlayerCircle);
-                        player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2 + 10, 50, 35, 10);
+                        player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2, 50, 35, 10);
                         people.Add(player.PlayerCircle);
                         bullets.Clear();
                         switch (level)
@@ -743,6 +743,7 @@ namespace BulletMania
                                 }
                                 punchSound.Play();
                             }
+
                         //Player Movement
                         player.PlayerSpeed = GetPlayerSpeed(keyboardState);
                         player.Move(borders, people);
@@ -935,41 +936,32 @@ namespace BulletMania
                 //Tutorial
                 else if (screen == Screen.tutorial)
                 {
+                    if (borders.Count == 0)
+                    {
+                        borders.Add(new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, 85));
+                        borders.Add(new Rectangle(0, _graphics.PreferredBackBufferHeight - 85, _graphics.PreferredBackBufferWidth, 85));
+                        borders.Add(new Rectangle(0, 0, 85, _graphics.PreferredBackBufferHeight));
+                        borders.Add(new Rectangle(_graphics.PreferredBackBufferWidth - 85, 0, 85, _graphics.PreferredBackBufferHeight));
+                    }
+                    people.Remove(player.PlayerCircle);
+                    player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2, 50, 35, 10);
+                    people.Add(player.PlayerCircle);
+                    bullets.Clear();
+                    boss = new Boss(bossBlue, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 1);
+                    people.Add(boss.BossCircle);
                     if (skipBTN.Click(mouseState, prevMouseState))
+                    {
+                        boss.BossHealth = 0;
                         screen = Screen.battle;
+                    }
                     else if (tutorialBTN.Click(mouseState, prevMouseState))
                         tutorialPhase++;
                     else if (prevBTN.Click(mouseState, prevMouseState) & tutorialPhase > 1)
                         tutorialPhase--;
-                    switch (tutorialPhase)
+                    if (tutorialPhase == 9)
                     {
-                        case 0:
-                            //Do Nothing
-                            break;
-                        case 1:
-                            //Explain the player
-                            break;
-                        case 2:
-                            //Explain the tank
-                            break;
-                        case 3:
-                            //What grunts are
-                            break;
-                        case 4:
-
-                            break;
-                        case 5:
-                            //How bombs work
-                            break;
-                        case 6:
-                            //how the shop works
-                            break;
-                        case 7:
-                            //Exit
-                            break;
-                        case 8:
-                            screen = Screen.battle;
-                            break;
+                        boss.BossHealth = 0;
+                        screen = Screen.battle;
                     }
                 }
             }
@@ -1006,30 +998,31 @@ namespace BulletMania
                         grunt.GruntTexture = enemy;
                     grunt.Draw(_spriteBatch);
                 }
-                if (player.PlayerHealth > 0 & startTime <= 0 & exit == false)
-                {
-                    player.Draw(_spriteBatch);
-                    if (bombTime < 5)
-                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, (int)(player.PlayerRectangle.Width * (bombTime / 5)), 10), Color.White * 0.7f);
-                    else
-                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, player.PlayerRectangle.Width, 10), Color.White * 0.7f);
-                }
-                if (boss.BossHealth > 0 & startTime <= 0)
-                    boss.Draw(_spriteBatch);
-                foreach (Rectangle border in borders)
-                    _spriteBatch.Draw(square, border, Color.White * 0f);
-                if (startTime > 0)
+                if (player.PlayerHealth > 0 & startTime > 0)
                 {
                     _spriteBatch.Draw(square, screenRect, Color.Black * 0.3f);
                     boss.Draw(_spriteBatch);
                     player.Draw(_spriteBatch);
                     if (bombTime < 5)
-                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, (int)(player.PlayerRectangle.Width * (bombTime / 5)), 10), Color.White * 0.7f);
+                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, (int)(58 * (bombTime / 5)), 10), Color.White * 0.7f);
                     else
-                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, player.PlayerRectangle.Width, 10), Color.White * 0.7f);
+                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, 58, 10), Color.White * 0.7f);
                     if (screen != Screen.tutorial)
                         _spriteBatch.DrawString(titleFont, Math.Round(startTime) + "", new Vector2(440, 450), Color.White);
                 }
+                if (player.PlayerHealth > 0 & startTime <= 0)
+                {
+                    player.Draw(_spriteBatch);
+                    if (bombTime < 5)
+                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, (int)(58 * (bombTime / 5)), 10), Color.White * 0.7f);
+                    else
+                        _spriteBatch.Draw(square, new Rectangle((int)player.PlayerPosition.X - 30, (int)player.PlayerPosition.Y + 30, 58, 10), Color.White * 0.7f);
+                }
+                if (boss.BossHealth > 0 & startTime <= 0)
+                    boss.Draw(_spriteBatch);
+                foreach (Rectangle border in borders)
+                    _spriteBatch.Draw(square, border, Color.White * 0f);
+
 
                 //Dead
                 if (screen == Screen.dead)
@@ -1050,43 +1043,119 @@ namespace BulletMania
                     switch (tutorialPhase)
                     {
                         case 0:
-                            _spriteBatch.DrawString(menuFont, "       Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            _spriteBatch.DrawString(menuFont, "      Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
                             break;
                         case 1:
                             //Explain the player
-                            _spriteBatch.DrawString(menuFont, "              This is you\n     What's your goal?\nDon't die, and blow that thing up", new Vector2(20, 200), Color.White);
-                            _spriteBatch.DrawString(shopFont, "<-(That thing)          (You)->", new Vector2(300, 500), Color.White);
-
+                            _spriteBatch.DrawString(menuFont, "         This is you\n      What's your goal?\nDon't die and kill that thing", new Vector2(60, 200), Color.White);
+                            _spriteBatch.DrawString(shopFont, "-(That thing)           (You)-", new Vector2(310, 443), Color.White);
                             break;
                         case 2:
                             //Explain the tank
-                            _spriteBatch.DrawString(menuFont, "         Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            _spriteBatch.DrawString(menuFont, "       That thing's\ngoing to try and kill you\n  Don't let that happen", new Vector2(110, 200), Color.White);
+                            _spriteBatch.DrawString(shopFont, "(Don't let this hit you)", new Vector2(300, 427), Color.White);
+                            _spriteBatch.DrawString(shopFont, "*pew*", new Vector2(310, 443), Color.White);
 
+                            _spriteBatch.Draw(bullet, new Rectangle(360, 435, 30, 30), Color.Black);
                             break;
                         case 3:
                             //What grunts are
-                            _spriteBatch.DrawString(menuFont, "          Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            _spriteBatch.Draw(rightPunch, new Rectangle(580, 420, 60, 60), Color.White);
+                            _spriteBatch.DrawString(menuFont, "Sometimes those things will spawn", new Vector2(5, 200), Color.White);
+                            _spriteBatch.DrawString(shopFont, "*punching sounds*", new Vector2(500, 500), Color.White);
 
                             break;
                         case 4:
                             //Powerups
-                            _spriteBatch.DrawString(menuFont, "           Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
-
+                            _spriteBatch.DrawString(menuFont, " If you kill them\nthey drop powerups\n(Most of the time)", new Vector2(200, 200), Color.White);
+                            _spriteBatch.Draw(ammoBuff, new Rectangle(580, 420, 60, 60), Color.White);
+                            _spriteBatch.Draw(ammoBuff, new Rectangle(280, 500, 60, 60), Color.White);
+                            _spriteBatch.DrawString(shopFont, "+Firing Speed", new Vector2(230, 560), Color.White);
+                            _spriteBatch.Draw(armourBuff, new Rectangle(430, 500, 60, 60), Color.White);
+                            _spriteBatch.DrawString(shopFont, "+Damage Res", new Vector2(400, 560), Color.White);
+                            _spriteBatch.Draw(speedBuff, new Rectangle(580, 500, 60, 60), Color.White);
+                            _spriteBatch.DrawString(shopFont, "+Speed", new Vector2(575, 560), Color.White);
                             break;
                         case 5:
                             //How bombs work
-                            _spriteBatch.DrawString(menuFont, "            Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
-
+                            _spriteBatch.DrawString(menuFont, "Right click to place bombs\n     Carefull  though\n     They hurt you to", new Vector2(100, 200), Color.White);
+                            _spriteBatch.Draw(bomb, new Rectangle(400, 450, 30, 30), Color.White);
+                            _spriteBatch.Draw(explosion, new Rectangle(500, 450, 30, 30), Color.White);
+                            _spriteBatch.DrawString(shopFont, "pre boom", new Vector2(370, 500), Color.White);
+                            _spriteBatch.DrawString(shopFont, "post boom", new Vector2(475, 500), Color.White);
+                            _spriteBatch.DrawString(shopFont, "<-(bomb recharge\n       time)", new Vector2(680, 478), Color.White);
                             break;
                         case 6:
-                            //how the shop works
-                            _spriteBatch.DrawString(menuFont, "             Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            //How the shop works part 1
 
+                            //Draw the shop
+
+                            _spriteBatch.Draw(square, screenRect, Color.White);
+                            
+                            _spriteBatch.DrawString(menuFont, $"Skill Points:{skillPoints}", new Vector2(37, 150), Color.Black);
+
+                            //Icons
+                            _spriteBatch.Draw(armourBuff, new Rectangle(0, 150, 300, 300), Color.White);
+                            _spriteBatch.Draw(ammoBuff, new Rectangle(300, 150, 300, 300), Color.White);
+                            _spriteBatch.Draw(speedBuff, new Rectangle(585, 150, 300, 300), Color.White);
+
+                            //Top Row
+                            if (armourTimeUpgrade == false)
+                                armourBuffBTN.Draw(_spriteBatch, mouseState);
+                            if (ammoTimeUpgrade == false)
+                                ammoBuffBTN.Draw(_spriteBatch, mouseState);
+                            if (speedTimeUpgrade == false)
+                                speedBuffBTN.Draw(_spriteBatch, mouseState);
+
+                            //Bottom Row
+                            if (armourAmountUpgrade == false)
+                                armourTimeBTN.Draw(_spriteBatch, mouseState);
+                            if (ammoAmountUpgrade == false)
+                                ammoTimeBTN.Draw(_spriteBatch, mouseState);
+                            if (speedAmountUpgrade == false)
+                                speedTimeBTN.Draw(_spriteBatch, mouseState);
+                            skipBTN.Draw(_spriteBatch, mouseState);
+                            prevBTN.Draw(_spriteBatch, mouseState);
+                            tutorialBTN.Draw(_spriteBatch, mouseState);
+                            _spriteBatch.DrawString(menuFont, "       This is  The Shop\n       After every level\nyou can upgrade the powerups here", new Vector2(5, 50), Color.Black);
                             break;
                         case 7:
-                            //Exit
-                            _spriteBatch.DrawString(menuFont, "              Welcome to Cool Game\nWould you like see the tutorial?", new Vector2(20, 200), Color.White);
+                            //How the shop works part 2
 
+                            //Draw the shop
+
+                            _spriteBatch.Draw(square, screenRect, Color.White);
+                            
+                            _spriteBatch.DrawString(menuFont, $"Skill Points:{skillPoints}", new Vector2(37, 150), Color.Black);
+
+                            //Icons
+                            _spriteBatch.Draw(armourBuff, new Rectangle(0, 150, 300, 300), Color.White);
+                            _spriteBatch.Draw(ammoBuff, new Rectangle(300, 150, 300, 300), Color.White);
+                            _spriteBatch.Draw(speedBuff, new Rectangle(585, 150, 300, 300), Color.White);
+
+                            //Top Row
+                            if (armourTimeUpgrade == false)
+                                armourBuffBTN.Draw(_spriteBatch, mouseState);
+                            if (ammoTimeUpgrade == false)
+                                ammoBuffBTN.Draw(_spriteBatch, mouseState);
+                            if (speedTimeUpgrade == false)
+                                speedBuffBTN.Draw(_spriteBatch, mouseState);
+
+                            //Bottom Row
+                            if (armourAmountUpgrade == false)
+                                armourTimeBTN.Draw(_spriteBatch, mouseState);
+                            if (ammoAmountUpgrade == false)
+                                ammoTimeBTN.Draw(_spriteBatch, mouseState);
+                            if (speedAmountUpgrade == false)
+                                speedTimeBTN.Draw(_spriteBatch, mouseState);
+                            skipBTN.Draw(_spriteBatch, mouseState);
+                            prevBTN.Draw(_spriteBatch, mouseState);
+                            tutorialBTN.Draw(_spriteBatch, mouseState);
+                            _spriteBatch.DrawString(menuFont, "Once you upgrade a powerup once\n        the second one\n     will cost twice as much", new Vector2(30, 50), Color.Black);
+                            break;
+                        case 8:
+                            //Exit
+                            _spriteBatch.DrawString(menuFont, "Well that's it from me\n      Good luck!", new Vector2(150, 200), Color.White);
                             break;
                     }
                 }
@@ -1101,20 +1170,40 @@ namespace BulletMania
                 _spriteBatch.Draw(speedBuff, new Rectangle(585, 150, 300, 300), Color.White);
 
                 //Top Row
+                armourBuffBTN.Draw(_spriteBatch, mouseState);
+                ammoBuffBTN.Draw(_spriteBatch, mouseState);
+                speedBuffBTN.Draw(_spriteBatch, mouseState);
                 if (armourTimeUpgrade == false)
-                    armourBuffBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
                 if (ammoTimeUpgrade == false)
-                    ammoBuffBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
                 if (speedTimeUpgrade == false)
-                    speedBuffBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+
 
                 //Bottom Row
+                armourTimeBTN.Draw(_spriteBatch, mouseState);
+                ammoTimeBTN.Draw(_spriteBatch, mouseState);
+                speedTimeBTN.Draw(_spriteBatch, mouseState);
                 if (armourAmountUpgrade == false)
-                    armourTimeBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
                 if (ammoAmountUpgrade == false)
-                    ammoTimeBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
                 if (speedAmountUpgrade == false)
-                    speedTimeBTN.Draw(_spriteBatch, mouseState);
+                    _spriteBatch.DrawString(shopFont, "Points: 1", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
+                    _spriteBatch.DrawString(shopFont, "Points: 2", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+
 
                 //Continue
                 continueBTN.Draw(_spriteBatch, mouseState);
