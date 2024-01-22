@@ -238,6 +238,12 @@
 /processorParam:TextureFormat=Color
 /build:IconSpeed.png
 
+#begin jumpCoin.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:jumpCoin.wav
+
 #begin MachineGun2.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -262,6 +268,12 @@
 /processorParam:PremultiplyAlpha=True
 /processorParam:TextureFormat=Compressed
 /build:menuFont.spritefont
+
+#begin mixkit-arcade-game-jump-coin-216.wav
+/importer:WavImporter
+/processor:SoundEffectProcessor
+/processorParam:Quality=Best
+/build:mixkit-arcade-game-jump-coin-216.wav
 
 #begin pistol-cock-6014.wav
 /importer:WavImporter

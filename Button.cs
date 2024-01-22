@@ -56,6 +56,7 @@ namespace BulletMania
         public string ButtonText
         {
             get { return text; }
+            set { text = value; }
         }
     }
 }

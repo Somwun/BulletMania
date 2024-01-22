@@ -105,5 +105,10 @@ namespace BulletMania
             get { return Health; }
             set { Health = value; }
         }
+        public Texture2D BossTexture
+        {
+            get { return Texture; }
+            set { Texture = value; }
+        }
     }
 }

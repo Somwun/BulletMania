@@ -13,7 +13,7 @@ namespace BulletMania
         private GraphicsDeviceManager _graphics;
         private SpriteBatch _spriteBatch;
         MouseState mouseState, prevMouseState;
-        KeyboardState keyboardState;
+        KeyboardState keyboardState, prevKeyboardState;
         Texture2D explosion, ammoBuff, armourBuff, speedBuff, unknown, bullet, arena, square, cursor, frame, bomb, skull, blankTexture, circle;
         Texture2D playerMachineGun, bigPlayerMachineGun, playerShotGun, bigPlayerShotGun, currentPlayer, machineGun, shotGun;
         Texture2D currentBoss, bossBlue, bossRed, helicopter, enemy, leftPunch, rightPunch;
@@ -31,8 +31,8 @@ namespace BulletMania
         List<Bullet> bullets;
         List<Bomb> bombs;
         List<Buff> buffs;
-        SoundEffect shotGunSound, machineGunSound, punchSound, explosionSound, speedUpSound, armourSound, ammoSound, hurt1, hurt2, hurt3;
-        SoundEffectInstance explosionInstance;
+        SoundEffect shotGunSound, machineGunSound, punchSound, explosionSound, speedUpSound, armourSound, ammoSound, hurt1, hurt2, hurt3, click;
+        SoundEffectInstance explosionInstance, clickInstance;
         SpriteFont testFont, menuFont, shopFont, titleFont;
         float playerRotation, bossRotation, ammoBuffAmount, shotGunReloadTime, machineGunReloadTime, bombReloadTime;
         int speed, damage, speedBuffAmount, armourBuffAmount, skillPoints, level;
@@ -46,10 +46,11 @@ namespace BulletMania
         bool defeatedBlueTank, defeatedRedTank, defeatedHelicopter;
         double finishTime;
         List<string> acheivmentsList;
+        string cheatCode;
 
         enum Screen
         {
-            shop, battle, dead, exit, intro, tutorial
+            shop, battle, dead, exit, intro, tutorial, win
         }
         Screen screen;
         public Game1()
@@ -68,24 +69,22 @@ namespace BulletMania
 
             a = 0;
 
-            
-
             if (!File.Exists("Acheivments.txt"))
             {
                 defeatedBlueTank = false;
                 defeatedRedTank = false;
                 defeatedHelicopter = false;
-                finishTime = 0;
-                acheivmentsList = new List<string>()
+                finishTime = 0;               
+            }
+            acheivmentsList = new List<string>()
                 {
                     "False",
                     "False",
                     "False",
                     "0"
                 };
-            }
-            else
-                acheivmentsList = new List<string>();
+
+            cheatCode = "";
 
             screen = Screen.intro;
 
@@ -238,6 +237,9 @@ namespace BulletMania
             hurt2 = Content.Load<SoundEffect>("grunt1-84540");
             hurt3 = Content.Load<SoundEffect>("male_hurt7-48124");
 
+            click = Content.Load<SoundEffect>("jumpCoin");
+            clickInstance = click.CreateInstance();
+
         }
         protected override void Update(GameTime gameTime)
         {
@@ -245,17 +247,18 @@ namespace BulletMania
             if (a == 0)
             {
                 if (File.Exists("Acheivments.txt"))
-                    Load(acheivmentsList);
+                    Load();
                 else
                 {
-                    Save(acheivmentsList);
-                    Load(acheivmentsList);
+                    Save();
+                    Load();
                 }
                 a++;
             }
             prevExitState = exit;
             prevMouseState = mouseState;
             mouseState = Mouse.GetState();
+            prevKeyboardState = keyboardState;
             keyboardState = Keyboard.GetState();
             mousePos = new Vector2(mouseState.X, mouseState.Y);
             if (screen == Screen.intro)
@@ -285,12 +288,16 @@ namespace BulletMania
                 {
                     if (quitBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         startUp = true;
                         exit = false;
                         screen = Screen.intro;
                     }
                     else if (dontQuitBTN.Click(mouseState, prevMouseState))
+                    {
+                        clickInstance.Play();
                         exit = false;
+                    }
                 }
             }
 
@@ -302,6 +309,7 @@ namespace BulletMania
                     if (startUp)
                     {
                         borders.Clear();
+                        currentBoss = bossBlue;
                         skillPoints = 0;
                         tutorialPhase = 0;
                         boss.BossHealth = 0;
@@ -340,18 +348,21 @@ namespace BulletMania
                     }
                     if (shotGunBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         currentPlayer = bigPlayerShotGun;
                         shotGunEquipped = true;
                         machineGunEquipped = false;
                     }
                     else if (machineGunBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         currentPlayer = bigPlayerMachineGun;
                         shotGunEquipped = false;
                         machineGunEquipped = true;
                     }
                     else if (playBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         if (machineGunEquipped)
                             currentPlayer = playerMachineGun;
                         else
@@ -413,6 +424,38 @@ namespace BulletMania
 
                     for (int i = 0; i < bullets.Count; i++)
                         bullets[i].Move(borders, people, bullets, player, boss);
+
+                    if (keyboardState.IsKeyDown(Keys.Up) & !prevKeyboardState.IsKeyDown(Keys.Up))
+                        cheatCode += "U";
+                    else if (keyboardState.IsKeyDown(Keys.Down) & !prevKeyboardState.IsKeyDown(Keys.Down))
+                        cheatCode += "D";
+                    else if (keyboardState.IsKeyDown(Keys.Left) & !prevKeyboardState.IsKeyDown(Keys.Left))
+                        cheatCode += "L";
+                    else if (keyboardState.IsKeyDown(Keys.Right) & !prevKeyboardState.IsKeyDown(Keys.Right))
+                        cheatCode += "R";
+                    else if (keyboardState.IsKeyDown(Keys.B) & !prevKeyboardState.IsKeyDown(Keys.B))
+                        cheatCode += "B";
+                    else if (keyboardState.IsKeyDown(Keys.A) & !prevKeyboardState.IsKeyDown(Keys.A))
+                        cheatCode += "A";
+                    else if (keyboardState.IsKeyDown(Keys.Escape))
+                    {
+                        currentBoss = bossBlue;
+                        level = 1;
+                        cheatCode = "";
+                        playBTN.ButtonText = "Play >";
+                    }
+                    if (cheatCode == "UUDDLRLRBA")
+                    {
+                        currentBoss = helicopter;
+                        level = 6;
+                        playBTN.ButtonText = "  6";
+                    }
+                    if (cheatCode == "DDUURLRLAB")
+                    {
+                        currentBoss = bossRed;
+                        level = 5;
+                        playBTN.ButtonText = "  5";
+                    }
                 }
 
                 //Battle
@@ -423,11 +466,11 @@ namespace BulletMania
                     {
                         if (level > 1)
                             defeatedBlueTank = true;
-                        if (level > 3)
+                        if (level > 5)
                             defeatedRedTank = true;
-                        if (level >= 6)
+                        if (level > 6)
                             defeatedHelicopter = true;
-                        Save(acheivmentsList);
+                        Save();
                         if (borders.Count == 0)
                         {
                             borders.Add(new Rectangle(0, 0, _graphics.PreferredBackBufferWidth, 85));
@@ -442,18 +485,22 @@ namespace BulletMania
                         switch (level)
                         {
                             case 1:
+                                currentBoss = bossBlue;
                                 boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 50);
                                 people.Add(boss.BossCircle);
                                 break;
                             case 2:
+                                currentBoss = bossBlue;
                                 boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 100);
                                 people.Add(boss.BossCircle);
                                 break;
                             case 3:
+                                currentBoss = bossBlue;
                                 boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 200);
                                 people.Add(boss.BossCircle);
                                 break;
                             case 4:
+                                currentBoss = bossBlue;
                                 boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 300);
                                 people.Add(boss.BossCircle);
                                 break;
@@ -611,7 +658,7 @@ namespace BulletMania
                                 bombTime = 0;
                             }
 
-                        //Enemy Updates
+                        //Boss Shooting
                         bossBulletTime += gameTime.ElapsedGameTime.TotalSeconds;
                         bossBulletTime2 += gameTime.ElapsedGameTime.TotalMilliseconds;
                         if (level == 1)
@@ -663,11 +710,12 @@ namespace BulletMania
                         else if (level == 5)
                         {
                             if (bossBulletTime >= 1f)
-                            {
-                                bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
-                                machineGunSound.Play();
-                                bossBulletTime = 0;
-                            }
+                                if (bossBulletTime2 >= 1000)
+                                {
+                                    bullets.Add(new Bullet(bullet, PlaceBullet(false), 30, GetBulletAngle(boss.BossPosition, player.PlayerPosition), playerShooting));
+                                    machineGunSound.Play();
+                                    bossBulletTime2 = 0;
+                                }
                             if (bossBulletTime >= 3)
                             {
                                 bombs.Add(new Bomb(bomb, explosion, (int)boss.BossPosition.X, (int)boss.BossPosition.Y, 20));
@@ -692,13 +740,13 @@ namespace BulletMania
                             }
                             boss.BossSpeed = GetSpeed(boss.BossPosition, player.PlayerPosition);
                             boss.Move(people);
-                        }
+                        }                       
 
                         //Spawning Grunts
                         gruntSpawnTime += gameTime.ElapsedGameTime.TotalSeconds;
                         if (Math.Round(gruntSpawnTime % 5) == 0 & gruntSpawnTime > 1)
                         {
-                            if (grunts.Count < level + 1)
+                            if (grunts.Count < level)
                                 if (keepSpawning == true)
                                 {
                                     for (int i = 0; i < 1; i++)
@@ -837,9 +885,11 @@ namespace BulletMania
                             screen = Screen.dead;
                         if (boss.BossHealth <= 0)
                         {
-                            skillPoints += 1;
-                            level += 1;
-                            screen = Screen.shop;
+                            explosionInstance.Stop();
+                            explosionInstance.Play();
+                            skillPoints ++;
+                            level ++;
+                            screen = Screen.win;
                         }
                         for (int i = 0; i < grunts.Count; i++)
                         {
@@ -876,7 +926,7 @@ namespace BulletMania
                     damage = 2;
                     machineGunReloadTime = 100;
                     shotGunReloadTime = 500;
-                    bombReloadTime = 5;
+                    bombReloadTime = 0;
                     bullets.Clear();
                     bombs.Clear();
                     people.Clear();
@@ -897,59 +947,69 @@ namespace BulletMania
                     startTime = 5;
                     keepSpawning = false;
 
-                    if (skillPoints > 0)
+                    if (armourBuffBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & skillPoints >= armourAmountCost)
                     {
-                        if (armourBuffBTN.Click(mouseState, prevMouseState) & armourAmountUpgrade == false & skillPoints >= armourAmountCost)
-                        {
-                            armourBuffAmount += 1;
-                            armourAmountUpgrade = true;
-                            skillPoints -= armourAmountCost;
-                            armourTimeCost++;
-                        }
-                        else if (armourTimeBTN.Click(mouseState, prevMouseState) & armourTimeUpgrade == false & skillPoints >= armourTimeCost)
-                        {
-                            armourTimeUpgrade = true;
-                            skillPoints -= armourTimeCost;
-                            armourAmountCost++;
-                        }
-                        else if (ammoBuffBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & skillPoints >= ammoAmountCost)
-                        {
-                            ammoBuffAmount -= 0.17f;
-                            ammoAmountUpgrade = true;
-                            skillPoints -= ammoAmountCost;
-                            ammoTimeCost++;
-                        }
-                        else if (ammoTimeBTN.Click(mouseState, prevMouseState) & ammoTimeUpgrade == false & skillPoints >= ammoTimeCost)
-                        {
-                            ammoTimeUpgrade = true;
-                            skillPoints -= ammoTimeCost;
-                            ammoAmountCost++;
-                        }
-                        else if (speedBuffBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & skillPoints >= ammoAmountCost)
-                        {
-                            speedBuffAmount += 2;
-                            speedAmountUpgrade = true;
-                            skillPoints -= speedAmountCost;
-                            speedTimeCost++;
-                        }
-                        else if (speedTimeBTN.Click(mouseState, prevMouseState) & speedTimeUpgrade == false & skillPoints >= ammoTimeCost)
-                        {
-                            speedTimeUpgrade = true;
-                            skillPoints -= ammoTimeCost;
-                            ammoAmountCost++;
-                        }
+                        clickInstance.Play();
+                        armourBuffAmount += 1;
+                        armourAmountUpgrade = true;
+                        skillPoints -= armourAmountCost;
+                        armourTimeCost++;
+                    }
+                    else if (armourTimeBTN.Click(mouseState, prevMouseState) & armourTimeUpgrade == false & skillPoints >= armourTimeCost)
+                    {
+                        clickInstance.Play();
+                        armourTimeUpgrade = true;
+                        skillPoints -= armourTimeCost;
+                        armourAmountCost++;
+                    }
+                    else if (ammoBuffBTN.Click(mouseState, prevMouseState) & ammoAmountUpgrade == false & skillPoints >= ammoAmountCost)
+                    {
+                        clickInstance.Play();
+                        ammoBuffAmount -= 0.17f;
+                        ammoAmountUpgrade = true;
+                        skillPoints -= ammoAmountCost;
+                        ammoTimeCost++;
+                    }
+                    else if (ammoTimeBTN.Click(mouseState, prevMouseState) & ammoTimeUpgrade == false & skillPoints >= ammoTimeCost)
+                    {
+                        clickInstance.Play();
+                        ammoTimeUpgrade = true;
+                        skillPoints -= ammoTimeCost;
+                        ammoAmountCost++;
+                    }
+                    else if (speedBuffBTN.Click(mouseState, prevMouseState) & speedAmountUpgrade == false & skillPoints >= speedAmountCost)
+                    {
+                        clickInstance.Play();
+                        speedBuffAmount += 2;
+                        speedAmountUpgrade = true;
+                        skillPoints -= speedAmountCost;
+                        speedTimeCost++;
+                    }
+                    else if (speedTimeBTN.Click(mouseState, prevMouseState) & speedTimeUpgrade == false & skillPoints >= speedTimeCost)
+                    {
+                        clickInstance.Play();
+                        speedTimeUpgrade = true;
+                        skillPoints -= speedTimeCost;
+                        speedAmountCost++;
                     }
                     if (continueBTN.Click(mouseState, prevMouseState))
+                    {
+                        clickInstance.Play();
                         screen = Screen.battle;
+                    }
                 }
-
+                
                 //Death
                 else if (screen == Screen.dead)
                 {
                     if (deathQuitBTN.Click(mouseState, prevMouseState))
+                    {
+                        clickInstance.Play();
                         Exit();
+                    }
                     if (deathMenuBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         startUp = true;
                         screen = Screen.intro;
                     }
@@ -969,21 +1029,52 @@ namespace BulletMania
                     player = new Player(playerRotation, currentPlayer, square, frame, _graphics.PreferredBackBufferWidth / 2 + 200, _graphics.PreferredBackBufferHeight / 2, 50, 35, 10);
                     people.Add(player.PlayerCircle);
                     bullets.Clear();
-                    boss = new Boss(bossBlue, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 1);
+                    if (level != 6)
+                        boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 150, 150, 1);
+                    else
+                    {
+                        bossRotation += 1.575f;
+                        boss = new Boss(currentBoss, square, frame, _graphics.PreferredBackBufferWidth / 2 - 200, _graphics.PreferredBackBufferHeight / 2, 100, 250, 1);
+                    }
                     people.Add(boss.BossCircle);
                     if (skipBTN.Click(mouseState, prevMouseState))
                     {
+                        clickInstance.Play();
                         boss.BossHealth = 0;
                         screen = Screen.battle;
                     }
                     else if (tutorialBTN.Click(mouseState, prevMouseState))
+                    {
+                        clickInstance.Play();
                         tutorialPhase++;
+                    }
                     else if (prevBTN.Click(mouseState, prevMouseState) & tutorialPhase > 1)
+                    {
+                        clickInstance.Play();
                         tutorialPhase--;
+                    }
                     if (tutorialPhase == 9)
                     {
                         boss.BossHealth = 0;
                         screen = Screen.battle;
+                    }
+                }
+                
+                //Win
+                else if (screen == Screen.win)
+                {
+                    boss.BossTexture = explosion;
+                    if (continueBTN.Click(mouseState, prevMouseState))
+                    {
+                        clickInstance.Play();
+                        if (level <= 6)
+                            screen = Screen.shop;
+                        else
+                        {
+                            startUp = true;
+                            player = new Player(playerRotation, currentPlayer, blankTexture, blankTexture, 165, 240, 200, 142, 10);
+                            screen = Screen.intro;
+                        }
                     }
                 }
             }
@@ -997,7 +1088,9 @@ namespace BulletMania
         {
             GraphicsDevice.Clear(Color.White);
             _spriteBatch.Begin();
-            if (screen == Screen.battle || screen == Screen.dead || screen == Screen.tutorial)
+            
+            //Battle*
+            if (screen == Screen.battle || screen == Screen.dead || screen == Screen.tutorial || screen == Screen.win)
             {
                 //Battle
                 _spriteBatch.Draw(arena, screenRect, Color.White);
@@ -1044,7 +1137,6 @@ namespace BulletMania
                     boss.Draw(_spriteBatch);
                 foreach (Rectangle border in borders)
                     _spriteBatch.Draw(square, border, Color.White * 0f);
-
 
                 //Dead
                 if (screen == Screen.dead)
@@ -1185,7 +1277,18 @@ namespace BulletMania
                             break;
                     }
                 }
+
+                //Win
+                if (screen == Screen.win)
+                {
+                    _spriteBatch.Draw(square, screenRect, Color.Black * 0.3f);
+                    boss.Draw(_spriteBatch);
+                    player.Draw(_spriteBatch);
+                    continueBTN.Draw(_spriteBatch, mouseState);
+                }
             }
+            
+            //Shop
             else if (screen == Screen.shop)
             {
                 _spriteBatch.DrawString(menuFont, $"Skill Points:{skillPoints}", new Vector2(37, 150), Color.Black);
@@ -1204,74 +1307,40 @@ namespace BulletMania
                 speedTimeBTN.Draw(_spriteBatch, mouseState);
 
                 //Armour Cost
-                if (armourTimeUpgrade == false & armourAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (armourAmountUpgrade & armourTimeUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (armourTimeUpgrade & armourAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
+                if (armourAmountUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {armourAmountCost}", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
                 else
-                {
                     _spriteBatch.DrawString(shopFont, "Bought", new Vector2(armourBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                if (armourTimeUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {armourTimeCost}", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
                     _spriteBatch.DrawString(shopFont, "Bought", new Vector2(armourTimeBTN.ButtonRectangle.X + 10, armourTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
 
                 //Ammo Cost
-                if (ammoTimeUpgrade == false & ammoAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (ammoAmountUpgrade & ammoTimeUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (ammoTimeUpgrade & ammoAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
+                if (ammoAmountUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {ammoAmountCost}", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
                 else
-                {
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, ammoBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(ammoBuffBTN.ButtonRectangle.X + 10, armourBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                if (ammoTimeUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {ammoTimeCost}", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
                     _spriteBatch.DrawString(shopFont, "Bought", new Vector2(ammoTimeBTN.ButtonRectangle.X + 10, ammoTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
 
                 //Speed Cost
-                if (speedTimeUpgrade == false & speedAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 1", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (speedAmountUpgrade & speedTimeUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
-                else if (speedTimeUpgrade & speedAmountUpgrade == false)
-                {
-                    _spriteBatch.DrawString(shopFont, "Cost: 2", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
-                    _spriteBatch.DrawString(shopFont, "Bought", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
+                if (speedAmountUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {speedAmountCost}", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
                 else
-                {
                     _spriteBatch.DrawString(shopFont, "Bought", new Vector2(speedBuffBTN.ButtonRectangle.X + 10, speedBuffBTN.ButtonRectangle.Y + 10), Color.Black);
+                if (speedTimeUpgrade == false)
+                    _spriteBatch.DrawString(shopFont, $"Cost: {speedTimeCost}", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
+                else
                     _spriteBatch.DrawString(shopFont, "Bought", new Vector2(speedTimeBTN.ButtonRectangle.X + 10, speedTimeBTN.ButtonRectangle.Y + 10), Color.Black);
-                }
 
                 //Continue
                 continueBTN.Draw(_spriteBatch, mouseState);
             }
+            
+            //Intro
             else if (screen == Screen.intro)
             {
                 for (int i = 0; i < bullets.Count; i++)
@@ -1300,6 +1369,8 @@ namespace BulletMania
                     _spriteBatch.Draw(helicopter, new Rectangle(715, 575, 100, 250), null, Color.White, 1.575f, new Vector2(helicopter.Width / 2, helicopter.Height / 2), SpriteEffects.None, 0f);
 
             }
+            
+            //Exit
             if (exit == true)
             {
                 _spriteBatch.Draw(square, screenRect, Color.Black * 0.3f);
@@ -1310,8 +1381,11 @@ namespace BulletMania
                 quitBTN.Draw(_spriteBatch, mouseState);
                 dontQuitBTN.Draw(_spriteBatch, mouseState);
             }
+
             _spriteBatch.Draw(cursor, cursorRect, Color.Black);
+
             //Debugers
+                //Nothing
             _spriteBatch.End();
             base.Draw(gameTime);
         }
@@ -1370,15 +1444,25 @@ namespace BulletMania
             }
             else
             {
-                bulletX = (float)(boss.BossPosition.X + Math.Cos(boss.BossRotation) * 70);
-                bulletY = (float)(boss.BossPosition.Y + Math.Sin(boss.BossRotation) * 70);
-                bulletX -= 10;
-                bulletY -= 10;
+                if (level != 6)
+                {
+                    bulletX = (float)(boss.BossPosition.X + Math.Cos(boss.BossRotation) * 70);
+                    bulletY = (float)(boss.BossPosition.Y + Math.Sin(boss.BossRotation) * 70);
+                    bulletX -= 10;
+                    bulletY -= 10;
+                }
+                else
+                {
+                    bulletX = (float)(boss.BossPosition.X + Math.Cos(boss.BossRotation - 1.575f) * 70);
+                    bulletY = (float)(boss.BossPosition.Y + Math.Sin(boss.BossRotation - 1.575f) * 70);
+                    bulletX -= 10;
+                    bulletY -= 10;
+                }
             }
 
             return new Vector2(bulletX, bulletY);
         }
-        public void Save(List<string> acheivmentsList)
+        public void Save()
         {
             acheivments = new StreamWriter("Acheivments.txt");
             acheivmentsList[0] =(Convert.ToString(defeatedBlueTank));
@@ -1389,7 +1473,7 @@ namespace BulletMania
                 acheivments.WriteLine(line);
             acheivments.Close();
         }
-        public void Load(List<string> acheivmentsList)
+        public void Load()
         {
             int i = 0;
             if (File.Exists("Acheivments.txt"))
@@ -1406,7 +1490,7 @@ namespace BulletMania
                     i++;
                 }
             else
-                Save(acheivmentsList);
+                Save();
         }
     }
 }
