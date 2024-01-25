@@ -15,7 +15,7 @@ namespace BulletMania
         MouseState mouseState, prevMouseState;
         KeyboardState keyboardState, prevKeyboardState;
         Texture2D explosion, ammoBuff, armourBuff, speedBuff, unknown, bullet, arena, square, cursor, frame, bomb, skull, blankTexture, circle;
-        Texture2D playerMachineGun, bigPlayerMachineGun, playerShotGun, bigPlayerShotGun, currentPlayer, machineGun, shotGun;
+        Texture2D playerMachineGun, bigPlayerMachineGun, playerShotGun, bigPlayerShotGun, currentPlayer, machineGun, shotGun, playerMachineGunGold, bigPlayerMachineGunGold, playerShotGunGold, bigPlayerShotGunGold;
         Texture2D currentBoss, bossBlue, bossRed, helicopter, enemy, leftPunch, rightPunch;
         Rectangle screenRect, cursorRect;
         Vector2 mousePos, playerFace;
@@ -36,7 +36,7 @@ namespace BulletMania
         SpriteFont testFont, menuFont, shopFont, titleFont;
         float playerRotation, bossRotation, ammoBuffAmount, shotGunReloadTime, machineGunReloadTime, bombReloadTime;
         int speed, damage, speedBuffAmount, armourBuffAmount, skillPoints, level;
-        int a, tutorialPhase;
+        int load, tutorialPhase;
         int armourAmountCost, armourTimeCost, ammoAmountCost, ammoTimeCost, speedAmountCost, speedTimeCost;
         double speedBuffTime, ammoBuffTime, armourBuffTime, totalArmourBuffTime, totalAmmoBuffTime, totalSpeedBuffTime;
         double bossBulletTime2, gruntSpawnTime, bossBulletTime, bulletTime, bombTime, gruntPunchTime, startTime;
@@ -67,7 +67,7 @@ namespace BulletMania
             Window.Title = "Cool Game";
             _graphics.ApplyChanges();
 
-            a = 0;
+            load = 0;
 
             if (!File.Exists("Acheivments.txt"))
             {
@@ -208,6 +208,10 @@ namespace BulletMania
             playerShotGun = Content.Load<Texture2D>("PixelManShotGunResize");
             bigPlayerShotGun = Content.Load<Texture2D>("PixelManBigShotGunResize");
             currentPlayer = Content.Load<Texture2D>("PixelManBigResize");
+            playerMachineGunGold = Content.Load<Texture2D>("PixelManGold");
+            bigPlayerMachineGunGold = Content.Load<Texture2D>("PixelManBigGold");
+            playerShotGunGold = Content.Load<Texture2D>("PixelManShotGunGold");
+            bigPlayerShotGunGold = Content.Load<Texture2D>("PixelManBigShotGunGold");
 
             bossBlue = Content.Load<Texture2D>("PixelTank2");
             bossRed = Content.Load<Texture2D>("PixelTankRed");
@@ -244,7 +248,7 @@ namespace BulletMania
         protected override void Update(GameTime gameTime)
         {
             //Set Variables
-            if (a == 0)
+            if (load == 0) //Load save data
             {
                 if (File.Exists("Acheivments.txt"))
                     Load();
@@ -253,7 +257,7 @@ namespace BulletMania
                     Save();
                     Load();
                 }
-                a++;
+                load++;
             }
             prevExitState = exit;
             prevMouseState = mouseState;
@@ -339,6 +343,15 @@ namespace BulletMania
                         shotGunReloadTime = 850;
                         startTime = 5;
                         keepSpawning = false;
+                        
+                        if (defeatedHelicopter)
+                        {
+                            playerMachineGun = playerMachineGunGold;
+                            playerShotGun = playerShotGunGold;
+                            bigPlayerMachineGun = bigPlayerMachineGunGold;
+                            bigPlayerShotGun = bigPlayerShotGunGold;
+                        }
+
                         if (machineGunEquipped)
                             currentPlayer = bigPlayerMachineGun;
                         else

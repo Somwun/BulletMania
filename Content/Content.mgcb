@@ -353,6 +353,18 @@
 /processorParam:TextureFormat=Color
 /build:PixelManBig2.png
 
+#begin PixelManBigGold.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PixelManBigGold.png
+
 #begin PixelManBigResize.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -377,6 +389,18 @@
 /processorParam:TextureFormat=Color
 /build:PixelManBigShotGun.png
 
+#begin PixelManBigShotGunGold.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PixelManBigShotGunGold.png
+
 #begin PixelManBigShotGunResize.png
 /importer:TextureImporter
 /processor:TextureProcessor
@@ -388,6 +412,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:PixelManBigShotGunResize.png
+
+#begin PixelManGold.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PixelManGold.png
 
 #begin PixelManResize.png
 /importer:TextureImporter
@@ -412,6 +448,18 @@
 /processorParam:MakeSquare=False
 /processorParam:TextureFormat=Color
 /build:PixelManShotGun.png
+
+#begin PixelManShotGunGold.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=False
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=False
+/processorParam:TextureFormat=Color
+/build:PixelManShotGunGold.png
 
 #begin PixelManShotGunResize.png
 /importer:TextureImporter
